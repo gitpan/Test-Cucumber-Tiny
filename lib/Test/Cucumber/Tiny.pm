@@ -1,6 +1,6 @@
 package Test::Cucumber::Tiny;
 {
-  $Test::Cucumber::Tiny::VERSION = '0.1';
+  $Test::Cucumber::Tiny::VERSION = '0.2';
 }
 use Mouse;
 require Test::Most;
@@ -30,7 +30,12 @@ to make the stories pass.
 
 =head1 SYNOPSIS
 
-Here is an example:
+If you need to shared the scenarios with the business analysts.
+
+Use yml format to write the scenarios and then using YAML module
+to decode it into arrayref for constructing a cucumber.
+
+Here is an example using arrayref:
 
  use Test::Most tests => 1;
  use Test::Cucumber::Tiny;
@@ -39,9 +44,6 @@ Here is an example:
     ## In order to avoid silly mistake
     ## As a math idiot
     ## I want to be told a sum of 2 numbers
-
-    ## If we need to shared the scenario with business analysts.
-    ## Use YAML format to write the scenarios.
 
     my $cucumber = Test::Cucumber::Tiny->new(
         scenarios => [
@@ -159,6 +161,7 @@ has scenarios => (
 =head2 Given
 
 @param regexp / hashref { regexp, data }
+
 @param code ref
 
 =cut
@@ -185,6 +188,7 @@ has _givens => (
 =head2 When
 
 @param regexp / hashref { regexp, data }
+
 @param code ref
 
 =cut
@@ -211,6 +215,7 @@ has _whens => (
 =head2 Then
 
 @param regexp / hashref { regexp, data }
+
 @param code ref
 
 =cut
