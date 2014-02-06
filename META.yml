@@ -17,4 +17,4 @@ name: Test-Cucumber-Tiny
 requires:
   Mo: 0
   Test::Most: 0
-version: 0.3
+version: 0.31

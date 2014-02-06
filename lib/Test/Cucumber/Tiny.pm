@@ -1,5 +1,5 @@
 package Test::Cucumber::Tiny;
-$Test::Cucumber::Tiny::VERSION = '0.3';
+$Test::Cucumber::Tiny::VERSION = '0.31';
 use Mo qw( default );
 require Test::Most;
 
@@ -318,6 +318,6 @@ L<https://github.com/cucumber/cucumber/wiki/Scenario-outlines>
 
 =cut
 
-no Mouse;
+no Mo;
 
 1;
