@@ -1,7 +1,9 @@
+0.3 2014-02-06
+    - Apply example value to the Scenario string
+    - Use Mo for a simply oo system
+
 0.2 2014-02-04
-
-   - Update POD 
-
+   - Update POD
+ 
 0.1 2014-02-04
-
    - First Version of Test::Cucumber::Tiny

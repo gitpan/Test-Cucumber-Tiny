@@ -7,6 +7,6 @@ build/
 cover_db/
 \.build/
 Test-Cucumber-Tiny-.+
-cpanfile.*
+cpanfile.snapshot
 dist\.ini
 .DS_Store

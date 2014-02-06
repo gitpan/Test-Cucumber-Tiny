@@ -1,8 +1,6 @@
 package Test::Cucumber::Tiny;
-{
-  $Test::Cucumber::Tiny::VERSION = '0.2';
-}
-use Mouse;
+$Test::Cucumber::Tiny::VERSION = '0.3';
+use Mo qw( default );
 require Test::Most;
 
 =head1 NAME
@@ -254,9 +252,11 @@ sub Test {
         my $subject  = $scenario->{Scenario}
             or die "Missing the name of Scenario";
 
-        Test::Most::diag("Scenario: $subject\n");
-
         foreach my $eg (@examples) {
+            my $subject = _apply_example( $subject => %$eg );
+
+            Test::Most::diag("Scenario: $subject\n");
+
             _run_test(
                 given => $scenario->{Given},
                 $eg, $self->_givens, \%stash
@@ -288,11 +288,7 @@ sub _run_test {
           : ($preconditions);
 
         foreach my $precondition (@preconditions) {
-            if ($example_ref) {
-                foreach my $key ( keys %$example_ref ) {
-                    $precondition =~ s/<$key>/$example_ref->{$key}/g;
-                }
-            }
+            $precondition = _apply_example( $precondition => %$example_ref );
             if ( ref $precondition ) {
                 $stash_ref->{data} = $precondition->{data};
                 $precondition = $precondition->{condition};
@@ -302,6 +298,16 @@ sub _run_test {
             }
         }
     }
+}
+
+sub _apply_example {
+    my $string = shift;
+    my %example = @_
+        or return $string;
+    foreach my $key ( keys %example ) {
+        $string =~ s/<\Q$key\E>/$example{$key}/g;
+    }
+    return $string;
 }
 
 =head1 SEE ALSO

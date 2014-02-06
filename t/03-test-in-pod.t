@@ -18,7 +18,7 @@ subtest "Feature Test - Calculator" => sub {
                 Then => [ "The result should be 120 on the screen", ]
             },
             {
-                Scenario => "Add numbers in examples",
+                Scenario => "Add numbers in examples <1st> + <2nd>",
                 Given    => [
                     "first, I entered <1st> into the calculator",
                     "second, I entered <2nd> into the calculator",
