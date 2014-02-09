@@ -1,6 +1,8 @@
 requires "Mo";
-requires "Test::Most";
+requires "Carp";
+requires "Readonly";
+requires "Test::More";
+requires "Try::Tiny";
 on test => sub {
     requires "Digest";
-    requires "Try::Tiny";
 };

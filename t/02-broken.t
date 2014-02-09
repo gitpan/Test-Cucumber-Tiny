@@ -1,5 +1,7 @@
+use strict;
+use warnings;
 use Try::Tiny;
-use Test::Most tests => 3;
+use Test::More tests => 3;
 use Test::Cucumber::Tiny;
 
 subtest "missing subject" => sub {
@@ -34,7 +36,7 @@ subtest "missing step" => sub {
             $cucumber->Test;
         }
         catch {
-            like $_, qr/Missing '$step' in scenario/, $step;
+            like $_, qr/Missing '$step' in scenario/i, $step;
         };
     }
 };

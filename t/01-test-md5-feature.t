@@ -1,4 +1,6 @@
-use Test::Most tests => 1;
+use strict;
+use warnings;
+use Test::More tests => 1;
 use Test::Cucumber::Tiny;
 
 use Digest;
@@ -60,7 +62,7 @@ subtest "Simple tests of Digest.pm" => sub {
                       . "the lines in it up to the indentation of the first",
                 }
             ],
-            Then => [ q{the hex output is "159d23fa5b69006ee89d81243f30cd2e"}, ],
+            Then => [ q{the hex output is "ee86bacb965c2353a524f3b4b4da4700"}, ],
         }
     );
 
