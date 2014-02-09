@@ -1,10 +1,9 @@
 package Test::Cucumber::Tiny;
-{
-  $Test::Cucumber::Tiny::VERSION = '0.4';
-}
+$Test::Cucumber::Tiny::VERSION = '0.5';
 use Mo qw( default );
 use Try::Tiny;
 use Carp qw( confess );
+use YAML ();
 use Readonly;
 require Test::More;
 
@@ -161,17 +160,27 @@ has scenarios => (
 
 =head1 METHODS
 
+=head2 new
+
+Create a cucumber for test
+
+ my $cuc = Test::Cucumber::Tiny->new(
+    scenarios => [
+        {
+            ....
+        }
+    ]
+ );
+
+ $cuc->Given(...);
+ ...
+ $cuc->Then(...);
+
+ $cuc->Test;
+
 =head2 Scenarios
 
-A short hand method to do follow
-
- my $cuc = Test::Cucumber::Tiny->new( scenarios => [
-    {
-        ....
-    }
- ] );
-
-Same as
+Create a cucumber with a plain array list of scenarios
 
  my $cuc = Test::Cucumber::Tiny->Scenarios(
     {
@@ -179,7 +188,11 @@ Same as
     }
  );
 
-That could also save one level of indents.
+ $cuc->Given(...);
+ ...
+ $cuc->Then(...);
+
+ $cuc->Test;
 
 =cut
 
@@ -188,6 +201,60 @@ sub Scenarios {
     die "This is a constructor not a object method"
       if ref $class;
     return $class->new( scenarios => \@_ );
+}
+
+=head2 ScenariosFromYML
+
+Create a cucumber from a YAML file.
+
+YMAL Example:
+
+ - Scenario: Add 2 numbers
+   Given:
+     - first, I entered 50 into the calculator
+     - second, I entered 70 into the calculator
+   When: I press add
+   Then: The result should be 120 on the screen
+
+ - Scenario: Add 3 numbers
+   Given:
+     - first, I entered 50 into the calculator
+     - second, I entered 70 into the calculator
+     - third, I entered 10 into the calculator
+   When: I press add
+   Then: The result should be 130 on the screen
+
+In Code:
+
+ my $cuc = Test::Cucumber::Tiny->ScenariosFromYML( "scenarios.yml" );
+ $cuc->Given(...);
+ ...
+ $cuc->Then(...);
+ $cuc->Test;
+
+=cut
+
+sub ScenariosFromYML {
+    goto &ScenariosFromYAML;
+}
+
+sub ScenariosFromYAML {
+    my $class = shift;
+    my $yml_file  = shift
+      or die "Missing YAML file\n";
+
+    if ( !-f $yml_file ) {
+        die "YAML file is not found\n";
+    }
+
+    my $scenarios_ref = YAML::LoadFile($yml_file)
+      or die "YAML file has no scenarios";
+
+    if ( ref $scenarios_ref ne "ARRAY" ) {
+        die "Invalid sceanrio in yml file. It is expecting array list\n";
+    }
+
+    return $class->Scenarios(@$scenarios_ref);
 }
 
 =head2 Before
@@ -395,7 +462,7 @@ sub NextExample {
     die { intercept => $NEXT_EXAMPLE };
 }
 
-=hea2 NextScenario
+=head2 NextScenario
 
 Just jump to the next scenario.
 
@@ -597,7 +664,7 @@ sub _intercept {
     return $intercept;
 }
 
-Readonly my @HEADS = qw(
+Readonly my @HEADS => qw(
   Scenario
   Examples
 );
@@ -673,6 +740,7 @@ L<https://github.com/cucumber/cucumber/wiki/Scenario-outlines>
 
 no Mo;
 no Carp;
+no YAML;
 no Try::Tiny;
 
 1;
