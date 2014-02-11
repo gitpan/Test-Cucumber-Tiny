@@ -4,6 +4,8 @@ use Try::Tiny;
 use Test::Cucumber::Tiny;
 use Test::More tests => 3;
 
+$ENV{CUCUMBER_VERBOSE} = "diag";
+
 subtest "next step" => sub {
     my @cases = (
         {

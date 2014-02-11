@@ -3,6 +3,8 @@ use warnings;
 use Test::More tests => 1;
 use Test::Cucumber::Tiny;
 
+$ENV{CUCUMBER_VERBOSE} = "diag";
+
 subtest "Feature Test - Calculator" => sub {
     ## In order to avoid silly mistake
     ## As a math idiot

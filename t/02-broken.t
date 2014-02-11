@@ -4,6 +4,8 @@ use Try::Tiny;
 use Test::More tests => 3;
 use Test::Cucumber::Tiny;
 
+$ENV{CUCUMBER_VERBOSE} = "diag";
+
 subtest "missing subject" => sub {
     my @scenarios = (
         {

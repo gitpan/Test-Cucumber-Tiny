@@ -1,3 +1,7 @@
+0.6 2014-02-11
+    + Update POD
+    + Added Logging in $c
+
 0.5 2014-02-09
     + Load scenarios from YAML file
     - Bugfix

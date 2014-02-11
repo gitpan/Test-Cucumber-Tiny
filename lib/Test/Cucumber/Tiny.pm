@@ -1,5 +1,7 @@
 package Test::Cucumber::Tiny;
-$Test::Cucumber::Tiny::VERSION = '0.5';
+{
+  $Test::Cucumber::Tiny::VERSION = '0.6';
+}
 use Mo qw( default );
 use Try::Tiny;
 use Carp qw( confess );
@@ -13,15 +15,9 @@ Test::Cucumber::Tiny - Cucumber-style testing in perl
 
 =head1 DESCRIPTION
 
-This Testing module provides a simple and less dependancy
-to run cucumber tests.
-
 Cucumber is a tool that executes plain-text functional
 descriptions as automated tests. The language that Cucumber
 understands is called Gherkin.
-
-We only need 2 things to build Cucumber test, a list a scenarios
-and to define the functions for the scenarios. Example in synopsis.
 
 While Cucumber can be thought of as a "testing" tool, 
 the intent of the tool is to support BDD. This means that
@@ -34,10 +30,7 @@ to make the stories pass.
 
 If you need to shared the scenarios with the business analysts.
 
-Use yml format to write the scenarios and then using YAML module
-to decode it into arrayref for constructing a cucumber.
-
-Here is an example using arrayref:
+Write the scenarios in YAML 
 
  use Test::More tests => 1;
  use Test::Cucumber::Tiny;
@@ -47,107 +40,94 @@ Here is an example using arrayref:
     ## As a math idiot
     ## I want to be told a sum of 2 numbers
 
-    my $cucumber = Test::Cucumber::Tiny->new(
-        scenarios => [
-            {
-                Scenario => "Add 2 numbers",
-                Given    => [
-                    "first, I entered 50 into the calculator",
-                    "second, I entered 70 into the calculator",
-                ],
-                When => [ "I press add", ],
-                Then => [ "The result should be 120 on the screen", ]
-            },
-            {
-                Scenario => "Add numbers in examples",
-                Given    => [
-                    "first, I entered <1st> into the calculator",
-                    "second, I entered <2nd> into the calculator",
-                ],
-                When     => [ "I press add", ],
-                Then     => [ "The result should be <answer> on the screen", ],
-                Examples => [
-                    {
-                        '1st'  => 5,
-                        '2nd'  => 6,
-                        answer => 11,
-                    },
-                    {
-                        '1st'  => 100,
-                        '2nd'  => 200,
-                        answer => 300,
-                    }
-                ],
-            },
-            {
-                Scenario => "Add numbers using data",
-                Given    => [
-                    {
-                        condition => "first, I entered number of",
-                        data      => 45,
-                    },
-                    {
-                        condition => "second, I entered number of",
-                        data      => 77,
-                    }
-                ],
-                When => [ "I press add", ],
-                Then => [
-                    {
-                        condition => "The result is",
-                        data      => 122,
-                    }
-                ],
-            }
-        ]
-    );
-    $cucumber->Given(
-        qr/^(.+),.+entered (\d+)/,
-        sub {
-            my $c = shift;
-            diag shift;
-            $c->{$1} = $2;
+Here is an example using YAML file:
+
+L<t/example_yml/test-in-pod.yml>
+
+    my $cucumber = Test::Cucumber::Tiny->ScenariosFromYAML( "t/example_yml/test-in-pod.yml" );
+
+Here is an example using array:
+
+    my $cucumber = Test::Cucumber::Tiny->Scenarios(
+        {
+            Scenario => "Add 2 numbers",
+            Given    => [
+                "first, I entered 50 into the calculator",
+                "second, I entered 70 into the calculator",
+            ],
+            When => [ "I press add", ],
+            Then => [ "The result should be 120 on the screen", ]
+        }, {
+            Scenario => "Add numbers in examples",
+            Given    => [
+                "first, I entered <1st> into the calculator",
+                "second, I entered <2nd> into the calculator",
+            ],
+            When     => [ "I press add", ],
+            Then     => [ "The result should be <answer> on the screen", ],
+            Examples => [
+                {
+                    '1st'  => 5,
+                    '2nd'  => 6,
+                    answer => 11,
+                }, {
+                    '1st'  => 100,
+                    '2nd'  => 200,
+                    answer => 300,
+                }
+            ],
+        }, {
+            Scenario => "Add numbers using data",
+            Given    => [
+                {
+                    condition => "first, I entered number of",
+                    data      => 45,
+                }, {
+                    condition => "second, I entered number of",
+                    data      => 77,
+                }
+            ],
+            When => [ "I press add", ],
+            Then => [
+                {
+                    condition => "The result is",
+                    data      => 122,
+                }
+            ],
         }
     );
-    $cucumber->Given(
-        qr/^(.+),.+entered number of/,
-        sub {
-            my $c = shift;
-            diag shift;
-            $c->{$1} = $c->{data};
-        }
-    );
-    $cucumber->When(
-        qr/press add/,
-        sub {
-            my $c = shift;
-            diag shift;
-            $c->{answer} = $c->{first} + $c->{second};
-        }
-    );
-    $cucumber->When(
-        qr/press subtract/,
-        sub {
-            my $c = shift;
-            diag shift;
-            $c->{answer} = $c->{first} - $c->{second};
-        }
-    );
-    $cucumber->Then(
-        qr/result.+should be (\d+)/,
-        sub {
-            my $c = shift;
-            is $1, $c->{answer}, shift;
-        }
-    );
-    $cucumber->Then(
-        qr/result is/,
-        sub {
-            my $c = shift;
-            is $c->{data}, $c->{answer}, shift;
-        }
-    );
-    $cucumber->Test;
+
+    $cucumber->Given( qr/^(.+),.+entered (\d+)/ => sub {
+        my $c       = shift;
+        my $subject = shift;
+        my $key     = $1;
+        my $num     = $2;
+        $c->{$key}  = $num;
+        $c->Log( $subject );
+    })
+    ->Given( qr/^(.+),.+entered number of/ => sub {
+        my $c       = shift;
+        my $subject = shift;
+        my $key     = $1;
+        $c->{$key}  = $c->{data};
+    })
+    ->When( qr/press add/ => sub {
+        my $c       = shift;
+        my $subject = shift;
+        $c->{answer} = $c->{first} + $c->{second};
+    })
+    ->Then( qr/result.+should be (\d+)/ => sub {
+        my $c        = shift;
+        my $subject  = shift;
+        my $expected = $1;
+        is $c->{answer}, $expected, $subject;
+    })
+    ->Then( qr/result is/ => sub {
+        my $c       = shift;
+        my $subject = shift;
+        is $c->{data}, $c->{answer}, $subject;
+    })
+    ->Test;
  };
 
 =cut
@@ -281,6 +261,8 @@ sub Before {
         condition  => $condition,
         definition => $definition,
       };
+
+    return $self;
 }
 
 has _befores => (
@@ -308,6 +290,7 @@ sub Given {
         condition  => $condition,
         definition => $definition,
       };
+    return $self;
 }
 
 has _givens => (
@@ -335,6 +318,7 @@ sub When {
         condition  => $condition,
         definition => $definition,
       };
+    return $self;
 }
 
 has _whens => (
@@ -362,6 +346,7 @@ sub Then {
         condition  => $condition,
         definition => $definition,
       };
+    return $self;
 }
 
 has _thens => (
@@ -391,6 +376,7 @@ sub Any {
     $self->When(@_);
     $self->Then(@_);
     $self->After(@_);
+    return $self;
 }
 
 =head2 After
@@ -417,6 +403,8 @@ sub After {
         condition  => $condition,
         definition => $definition,
       };
+
+    return $self;
 }
 
 has _afters => (
@@ -500,8 +488,10 @@ sub Test {
             my $Step         = $c->{Step};
             my $Data         = $c->{data};
             my $Example      = $c->{Example};
+            my $Examples     = $c->{Examples};
             my $FEATURE_WIDE = $c->{FEATURE_WIDE};
-            $self->_verbose("! DEBUG: $Scenario - $Step");
+            $self->Log("! DEBUG: $Scenario - $Step");
+            $DB::single=2;
             print q{};
         }
     );
@@ -522,9 +512,10 @@ sub Test {
       EXAMPLE:
         foreach my $example (@examples) {
             $stash{Example} = $example;
+            $stash{Examples} = $scenario->{Examples};
             my $subject = _apply_example( $subject => %$example );
 
-            $self->_verbose("\n--> Scenario: $subject\n");
+            $self->Log("\n--> Scenario: $subject\n");
 
             my %triggers = ();
 
@@ -542,7 +533,7 @@ sub Test {
             foreach my $step( @run_through ) {
                 $stash{Step} = $step;
                 my $intercept =
-                  $self->_run_step( $step, $scenario, $example, \%stash,
+                  $self->_run_step( $step, $scenario, $example, bless(\%stash, ref $self),
                     $triggers{$step} )
                   or next STEP;
                 next STEP     if $intercept eq $NEXT_STEP;
@@ -719,16 +710,166 @@ has verbose => (
     default => "explain",
 );
 
-sub _verbose {
+=head2 Log
+
+To use different Test verbose methods like diag, note or explain
+
+To set the method by
+
+export CUCUMBER_VERBOSE=diag
+
+or
+
+$ENV{CUCUMBER_VERBOSE} = "diag";
+
+or
+
+...::Tiny->new( verbose => "diag" );
+
+By default the method is "explain"
+
+=head3 usage
+
+$cucumber->Log( "here" );
+
+$cucumber->Given(qr/.+/ => sub {
+    my $c = shift;
+    $c->Log( "Test" );
+});
+
+=cut
+
+sub Log {
     my $self = shift;
     my $message = shift
         or return;
     my $mode = $ENV{CUCUMBER_VERBOSE} || $self->verbose
         or return;
     my $code = Test::More->can($mode)
-        or confess("FIXME: Invalid verbose mode $mode");
+        or confess("FIXME: Invalid verbose mode $mode. Try any method in Test::More");
     $code->($message);
 }
+
+=head1 BUILTIN STEPS
+
+=head2 debugger
+
+Use debugger in any steps with perl -d 
+
+that will stop to the point when reached.
+
+e.g.
+
+ Test::Cucumber::Tiny->Scenarios(
+    {
+        Given => "a clild a book",
+        When  => "he opens the book",
+        Then  => [
+            "debugger", ## <---- STOP here when run with perl -d test.t
+            "he will find the bookmark",
+        ]
+    }
+ );
+
+=head1 BUILTIN DATA POINTS
+
+=head2 $c
+
+Scenario wide stash, each scenario has it own one.
+
+any step subref the first arguments will be a hashref
+
+e.g.
+ $cucumber->Given( qr/.+/ => sub {
+     my $c       = shift; ## it is a hashref
+     my $subject = shift; ## The subject of the step
+     $c->Log( $subject );
+ });
+
+=head2 $c->{FEATURE_WIDE}
+
+Feature wide stash, all scenarios shared the same one.
+
+you can reach it inside the scenario stash by 
+FEATURE_WIDE key
+
+e.g.
+ $cucumber->Given( qr/.+/ => sub {
+     my $c       = shift;
+     my $subject = shift;
+     my $f       = $c->{FEATURE_WIDE}; ## A readonly HashRef
+     $f->{something_here} = 1;
+     $c->Log( $subject );
+ });
+
+=head2 $c->{Scenario}
+
+The subject you set for that scenario
+
+e.g.
+ $cucumber->Given( qr/.+/ => sub {
+     my $c = shift;
+     $c->Log( $c->{Scenario} );
+ });
+
+=head2 $c->{Step}
+
+The subject you set for the current step
+
+e.g.
+ $cucumber->Given( qr/.+/ => sub {
+     my $c = shift;
+     $c->Log( $c->{Step} );
+ });
+
+=head2 $c->{data}
+
+The current running step sample data
+
+e.g.
+
+ ...::Tiny->Scenarios(
+    {
+        Given  => {
+            condition => "...",
+            data      => "ANYTHING HERE",
+        }, ...
+    }
+ )
+ ->Given( qr/.+/ => sub {
+     my $c = shift;
+     my $anything_here = $c->{data};
+ });
+
+=head2 $c->{Example}
+
+The current running example
+
+=head2 $c->{Examples}
+
+All the examples in the current scenario
+
+e.g.
+
+ ...::Tiny->Scenarios(
+    {
+        Given  => "... <placeholder>",
+        Examples => [
+            {
+                placeholder => "foobar",
+            },
+            {
+                placeholder => "sample",
+            }
+        ]
+    }
+ )
+ ->Given( qr/.+/ => sub {
+     my $c = shift;
+     my $examples = $c->{data};
+ });
+
+=cut
 
 =head1 SEE ALSO
 

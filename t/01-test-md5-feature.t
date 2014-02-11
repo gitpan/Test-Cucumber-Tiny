@@ -5,6 +5,8 @@ use Test::Cucumber::Tiny;
 
 use Digest;
 
+$ENV{CUCUMBER_VERBOSE} = "diag";
+
 subtest "Simple tests of Digest.pm" => sub {
     ## As a developer planning to use Digest.pm
     ## I want to test the basic functionality of Digest.pm
