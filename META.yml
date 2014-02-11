@@ -20,4 +20,4 @@ requires:
   Test::More: 0
   Try::Tiny: 0
   YAML: 0
-version: 0.61
+version: 0.62

@@ -1,5 +1,5 @@
 package Test::Cucumber::Tiny;
-$Test::Cucumber::Tiny::VERSION = '0.61';
+$Test::Cucumber::Tiny::VERSION = '0.62';
 use Mo qw( default );
 use Try::Tiny;
 use Carp qw( confess );
@@ -497,7 +497,7 @@ sub Test {
   SCENARIO:
     foreach my $scenario ( @{ $self->scenarios } ) {
 
-        _check_scenario_setps($scenario);
+        _check_scenario_steps($scenario);
 
         my @examples = @{ $scenario->{Examples} || [ {} ] };
         my $subject = $scenario->{Scenario}
@@ -658,7 +658,7 @@ Readonly my @HEADS => qw(
   Examples
 );
 
-sub _check_scenario_setps {
+sub _check_scenario_steps {
     my $scenario      = shift;
     my %scenario_hash = ();
     if ( ref $scenario eq "ARRAY" ) {
@@ -763,11 +763,11 @@ e.g.
 
  Test::Cucumber::Tiny->Scenarios(
     {
-        Given => "a clild a book",
-        When  => "he opens the book",
+        Given => "a child found a book in library",
+        When  => "he finished reading",
         Then  => [
             "debugger", ## <---- STOP here when run with perl -d test.t
-            "he will find the bookmark",
+            "he will return it",
         ]
     }
  );
