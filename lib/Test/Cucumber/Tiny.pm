@@ -1,7 +1,5 @@
 package Test::Cucumber::Tiny;
-{
-  $Test::Cucumber::Tiny::VERSION = '0.6';
-}
+$Test::Cucumber::Tiny::VERSION = '0.61';
 use Mo qw( default );
 use Try::Tiny;
 use Carp qw( confess );
@@ -13,7 +11,7 @@ require Test::More;
 
 Test::Cucumber::Tiny - Cucumber-style testing in perl
 
-=head1 DESCRIPTION
+=head1 SYNOPSIS
 
 Cucumber is a tool that executes plain-text functional
 descriptions as automated tests. The language that Cucumber
@@ -26,7 +24,7 @@ verified by business analysts, domain experts, etc. non technical
 stakeholders. The production code is then written outside-in,
 to make the stories pass.
 
-=head1 SYNOPSIS
+=head1 USAGE
 
 If you need to shared the scenarios with the business analysts.
 
@@ -40,13 +38,11 @@ Write the scenarios in YAML
     ## As a math idiot
     ## I want to be told a sum of 2 numbers
 
-Here is an example using YAML file:
+    ## Here is an example using YAML file:
 
-L<t/example_yml/test-in-pod.yml>
+    my $cucumber = Test::Cucumber::Tiny->ScenariosFromYAML( "t/test_functions/something_something.yml" );
 
-    my $cucumber = Test::Cucumber::Tiny->ScenariosFromYAML( "t/example_yml/test-in-pod.yml" );
-
-Here is an example using array:
+    ## Here is an example using a list:
 
     my $cucumber = Test::Cucumber::Tiny->Scenarios(
         {
@@ -144,35 +140,35 @@ has scenarios => (
 
 Create a cucumber for test
 
- my $cuc = Test::Cucumber::Tiny->new(
+ Test::Cucumber::Tiny->new(
     scenarios => [
         {
             ....
         }
     ]
- );
+ )
 
- $cuc->Given(...);
- ...
- $cuc->Then(...);
+ ->Given(...)
+ 
+ ->Then(...)
 
- $cuc->Test;
+ ->Test;
 
 =head2 Scenarios
 
 Create a cucumber with a plain array list of scenarios
 
- my $cuc = Test::Cucumber::Tiny->Scenarios(
+ Test::Cucumber::Tiny->Scenarios(
     {
         ....
     }
- );
+ )
 
- $cuc->Given(...);
+ ->Given(...)
  ...
- $cuc->Then(...);
+ ->Then(...)
 
- $cuc->Test;
+ ->Test;
 
 =cut
 
@@ -359,13 +355,15 @@ has _thens => (
 
 Use any to set all 3 like below
 
- $cuc->Any( qr/.+/ => sub { return 1 } );
+ ->Any( qr/.+/ => sub { return 1 } );
 
 Same as
 
- $cuc->Given( qr/.+/ => sub { return 1 } );
- $cuc->When( qr/.+/ => sub { return 1 } );
- $cuc->Then( qr/.+/ => sub { return 1 } );
+ ->Before( qr/.+/ => sub { return 1 } );
+ ->Given(  qr/.+/ => sub { return 1 } );
+ ->When(   qr/.+/ => sub { return 1 } );
+ ->Then(   qr/.+/ => sub { return 1 } );
+ ->After(  qr/.+/ => sub { return 1 } );
 
 =cut
 
@@ -730,14 +728,17 @@ By default the method is "explain"
 
 =head3 usage
 
-$cucumber->Log( "here" );
+ $cucumber->Log( "here" );
 
-$cucumber->Given(qr/.+/ => sub {
+ $cucumber->Given(qr/.+/ => sub {
     my $c = shift;
     $c->Log( "Test" );
-});
+ });
 
 =cut
+
+sub SetVerboseMode {
+}
 
 sub Log {
     my $self = shift;
@@ -780,6 +781,7 @@ Scenario wide stash, each scenario has it own one.
 any step subref the first arguments will be a hashref
 
 e.g.
+
  $cucumber->Given( qr/.+/ => sub {
      my $c       = shift; ## it is a hashref
      my $subject = shift; ## The subject of the step
@@ -794,6 +796,7 @@ you can reach it inside the scenario stash by
 FEATURE_WIDE key
 
 e.g.
+
  $cucumber->Given( qr/.+/ => sub {
      my $c       = shift;
      my $subject = shift;
@@ -807,6 +810,7 @@ e.g.
 The subject you set for that scenario
 
 e.g.
+
  $cucumber->Given( qr/.+/ => sub {
      my $c = shift;
      $c->Log( $c->{Scenario} );
@@ -817,6 +821,7 @@ e.g.
 The subject you set for the current step
 
 e.g.
+
  $cucumber->Given( qr/.+/ => sub {
      my $c = shift;
      $c->Log( $c->{Step} );
