@@ -1,5 +1,7 @@
 package Test::Cucumber::Tiny;
-$Test::Cucumber::Tiny::VERSION = '0.62';
+{
+  $Test::Cucumber::Tiny::VERSION = '0.63';
+}
 use Mo qw( default );
 use Try::Tiny;
 use Carp qw( confess );
@@ -489,7 +491,8 @@ sub Test {
             my $Examples     = $c->{Examples};
             my $FEATURE_WIDE = $c->{FEATURE_WIDE};
             $self->Log("! DEBUG: $Scenario - $Step");
-            $DB::single=2;
+            $DB::single=1;
+            $DB::single=2; ## Avoid warnings use only once
             print q{};
         }
     );
@@ -499,39 +502,43 @@ sub Test {
 
         _check_scenario_steps($scenario);
 
-        my @examples = @{ $scenario->{Examples} || [ {} ] };
         my $subject = $scenario->{Scenario}
           or die "Missing the name of Scenario";
 
+        my @examples = @{ $scenario->{Examples} || [ {} ] };
+
         my %stash = ();
+        my $stash_ref = bless \%stash, ref $self;
+
+        Readonly $stash{Scenario}     => $subject;
+        Readonly $stash{Examples}     => \@examples;
         Readonly $stash{FEATURE_WIDE} => $self->FEATURE_WIDE_VAR;
-        Readonly $stash{Scenario} => $subject;
+
+        my %triggers = ();
+
+        $triggers{Before} = sub {
+            $self->_trigger_before_running_step(
+                Before => ( $subject, $scenario ) );
+        };
+
+        $triggers{After} = sub {
+            $self->_trigger_before_running_step(
+                After => ( $subject, $scenario ) );
+        };
 
       EXAMPLE:
         foreach my $example (@examples) {
             $stash{Example} = $example;
-            $stash{Examples} = $scenario->{Examples};
+
             my $subject = _apply_example( $subject => %$example );
 
             $self->Log("\n--> Scenario: $subject\n");
-
-            my %triggers = ();
-
-            $triggers{Before} = sub {
-                $self->_trigger_before_running_step(
-                    Before => ( $subject, $scenario ) );
-            };
-
-            $triggers{After} = sub {
-                $self->_trigger_before_running_step(
-                    After => ( $subject, $scenario ) );
-            };
 
           STEP:
             foreach my $step( @run_through ) {
                 $stash{Step} = $step;
                 my $intercept =
-                  $self->_run_step( $step, $scenario, $example, bless(\%stash, ref $self),
+                $self->_run_step( $step, $scenario, $example, $stash_ref,
                     $triggers{$step} )
                   or next STEP;
                 next STEP     if $intercept eq $NEXT_STEP;
