@@ -1,78 +1,89 @@
 use strict;
 use warnings;
-use Test::More tests => 1;
+use Test::More tests => 8;
 use Test::Cucumber::Tiny;
 
 $ENV{CUCUMBER_VERBOSE} = "diag";
 
-subtest "Feature Test - Calculator" => sub {
-    ## In order to avoid silly mistake
-    ## As a math idiot
-    ## I want to be told a sum of 2 numbers
+## subtest "Feature Test - Calculator" => sub {
+## In order to avoid silly mistake
+## As a math idiot
+## I want to be told a sum of 2 numbers
 
-    my $cucumber = eval { Test::Cucumber::Tiny->ScenariosFromYML };
+eval { Test::Cucumber::Tiny->ScenariosFromYML };
 
-    like $@, qr/Missing YAML file/, "Detect missing file argument";
+like $@, qr/Missing YAML file/, "Detect missing file argument";
 
-    $cucumber = eval { Test::Cucumber::Tiny->ScenariosFromYML( "t/example_yml/foobar.yml" ) };
+eval { Test::Cucumber::Tiny->ScenariosFromYML("t/example_yml/foobar.yml") };
 
-    like $@, qr/YAML file is not found/, "Detect invalid file path";
+like $@, qr/YAML file is not found/, "Detect invalid file path";
 
-    $cucumber = eval { Test::Cucumber::Tiny->ScenariosFromYML( "t/example_yml/empty.yml" ) };
+eval { Test::Cucumber::Tiny->ScenariosFromYML("t/example_yml/empty.yml") };
 
-    like $@, qr/YAML file has no scenarios/, "Detect missing scenarios in yml file";
+like $@, qr/YAML file has no scenarios/, "Detect missing scenarios in yml file";
 
-    $cucumber = eval { Test::Cucumber::Tiny->ScenariosFromYML( "t/example_yml/hashref.yml") };
+eval { Test::Cucumber::Tiny->ScenariosFromYML("t/example_yml/hashref.yml") };
 
-    like $@, qr/expecting array/, "Detect invalid data format in the yml file";
+like $@, qr/expecting array/, "Detect invalid data format in the yml file";
 
-    $cucumber = Test::Cucumber::Tiny->ScenariosFromYML( "t/example_yml/test-in-pod.yml" );
+Test::Cucumber::Tiny->
 
-    $cucumber->Given(
-        qr/^(.+),.+entered (\d+)/,
-        sub {
-            my $c = shift;
-            diag shift;
-            $c->{$1} = $2;
-        }
-    );
-    $cucumber->Given(
-        qr/^(.+),.+entered number of/,
-        sub {
-            my $c = shift;
-            diag shift;
-            $c->{$1} = $c->{data},;
-        }
-    );
-    $cucumber->When(
-        qr/press add/,
-        sub {
-            my $c = shift;
-            diag shift;
-            $c->{answer} = $c->{first} + $c->{second};
-        }
-    );
-    $cucumber->When(
-        qr/press subtract/,
-        sub {
-            my $c = shift;
-            diag shift;
-            $c->{answer} = $c->{first} - $c->{second};
-        }
-    );
-    $cucumber->Then(
-        qr/result.+should be (\d+)/,
-        sub {
-            my $c = shift;
-            is $1, $c->{answer}, shift;
-        }
-    );
-    $cucumber->Then(
-        qr/result is/,
-        sub {
-            my $c = shift;
-            is $c->{data}, $c->{answer}, shift;
-        }
-    );
-    $cucumber->Test;
-};
+  ScenariosFromYML("t/example_yml/test-in-pod-add-2-num.yml")->
+
+  ScenariosFromYML("t/example_yml/test-in-pod-use-data.yml")->
+
+  Given(
+    qr/^(.+),.+entered (\d+)/,
+    sub {
+        my $c = shift;
+        $c->Log(shift);
+        $c->{$1} = $2;
+    }
+  )->
+
+  Given(
+    qr/^(.+),.+entered number of/,
+    sub {
+        my $c = shift;
+        $c->Log(shift);
+        $c->{$1} = $c->{data},;
+    }
+  )->
+
+  When(
+    qr/press add/,
+    sub {
+        my $c = shift;
+        $c->Log(shift);
+        $c->{answer} = $c->{first} + $c->{second};
+    }
+  )->
+
+  When(
+    qr/press subtract/,
+    sub {
+        my $c = shift;
+        $c->Log(shift);
+        $c->{answer} = $c->{first} - $c->{second};
+    }
+  )->
+
+  Then(
+    qr/result.+should be (\d+)/,
+    sub {
+        my $c = shift;
+        is $1, $c->{answer}, shift;
+    }
+  )->
+
+  Then(
+    qr/result is/,
+    sub {
+        my $c = shift;
+        is $c->{data}, $c->{answer}, shift;
+    }
+  )->
+
+  Test;
+
+## };

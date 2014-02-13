@@ -19,13 +19,3 @@
       2nd:  200,
       answer: 300,
 
-- Scenario: Add numbers using data
-  Given:
-    - condition: first, I entered number of
-      data: 45
-    - condition: second, I entered number of
-      data: 77
-  When: I press add
-  Then:
-    - condition: The result is
-      data: 122

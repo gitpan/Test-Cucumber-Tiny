@@ -1,6 +1,6 @@
 package Test::Cucumber::Tiny;
 {
-  $Test::Cucumber::Tiny::VERSION = '0.63';
+  $Test::Cucumber::Tiny::VERSION = '0.64';
 }
 use Mo qw( default );
 use Try::Tiny;
@@ -35,14 +35,15 @@ Write the scenarios in YAML
  use Test::More tests => 1;
  use Test::Cucumber::Tiny;
 
- subtest "Feature Test - Calculator" => sub {
+subtest "Feature Test - Calculator" => sub {
     ## In order to avoid silly mistake
     ## As a math idiot
     ## I want to be told a sum of 2 numbers
 
     ## Here is an example using YAML file:
 
-    my $cucumber = Test::Cucumber::Tiny->ScenariosFromYAML( "t/test_functions/something_something.yml" );
+    my $cucumber = Test::Cucumber::Tiny->ScenariosFromYAML(
+        "t/test_functions/something_something.yml");
 
     ## Here is an example using a list:
 
@@ -55,7 +56,8 @@ Write the scenarios in YAML
             ],
             When => [ "I press add", ],
             Then => [ "The result should be 120 on the screen", ]
-        }, {
+        },
+        {
             Scenario => "Add numbers in examples",
             Given    => [
                 "first, I entered <1st> into the calculator",
@@ -68,19 +70,22 @@ Write the scenarios in YAML
                     '1st'  => 5,
                     '2nd'  => 6,
                     answer => 11,
-                }, {
+                },
+                {
                     '1st'  => 100,
                     '2nd'  => 200,
                     answer => 300,
                 }
             ],
-        }, {
+        },
+        {
             Scenario => "Add numbers using data",
             Given    => [
                 {
                     condition => "first, I entered number of",
                     data      => 45,
-                }, {
+                },
+                {
                     condition => "second, I entered number of",
                     data      => 77,
                 }
@@ -95,38 +100,43 @@ Write the scenarios in YAML
         }
     );
 
-    $cucumber->Given( qr/^(.+),.+entered (\d+)/ => sub {
-        my $c       = shift;
-        my $subject = shift;
-        my $key     = $1;
-        my $num     = $2;
-        $c->{$key}  = $num;
-        $c->Log( $subject );
-    })
-    ->Given( qr/^(.+),.+entered number of/ => sub {
-        my $c       = shift;
-        my $subject = shift;
-        my $key     = $1;
-        $c->{$key}  = $c->{data};
-    })
-    ->When( qr/press add/ => sub {
-        my $c       = shift;
-        my $subject = shift;
-        $c->{answer} = $c->{first} + $c->{second};
-    })
-    ->Then( qr/result.+should be (\d+)/ => sub {
-        my $c        = shift;
-        my $subject  = shift;
-        my $expected = $1;
-        is $c->{answer}, $expected, $subject;
-    })
-    ->Then( qr/result is/ => sub {
-        my $c       = shift;
-        my $subject = shift;
-        is $c->{data}, $c->{answer}, $subject;
-    })
-    ->Test;
- };
+    $cucumber->Given(
+        qr/^(.+),.+entered (\d+)/ => sub {
+            my $c       = shift;
+            my $subject = shift;
+            my $key     = $1;
+            my $num     = $2;
+            $c->{$key} = $num;
+            $c->Log($subject);
+        }
+      )->Given(
+        qr/^(.+),.+entered number of/ => sub {
+            my $c       = shift;
+            my $subject = shift;
+            my $key     = $1;
+            $c->{$key} = $c->{data};
+        }
+      )->When(
+        qr/press add/ => sub {
+            my $c       = shift;
+            my $subject = shift;
+            $c->{answer} = $c->{first} + $c->{second};
+        }
+      )->Then(
+        qr/result.+should be (\d+)/ => sub {
+            my $c        = shift;
+            my $subject  = shift;
+            my $expected = $1;
+            is $c->{answer}, $expected, $subject;
+        }
+      )->Then(
+        qr/result is/ => sub {
+            my $c       = shift;
+            my $subject = shift;
+            is $c->{data}, $c->{answer}, $subject;
+        }
+      )->Test;
+};
 
 =cut
 
@@ -161,24 +171,22 @@ Create a cucumber for test
 Create a cucumber with a plain array list of scenarios
 
  Test::Cucumber::Tiny->Scenarios(
-    {
-        ....
-    }
+    { ... }
  )
-
  ->Given(...)
- ...
+ ->When(...)
  ->Then(...)
-
  ->Test;
 
 =cut
 
 sub Scenarios {
     my $class = shift;
-    die "This is a constructor not a object method"
-      if ref $class;
-    return $class->new( scenarios => \@_ );
+    return $class->new( scenarios => \@_ )
+        if !ref $class;
+    my $self = $class;
+    push @{ $self->scenarios }, @_;
+    return $self;
 }
 
 =head2 ScenariosFromYML
@@ -204,11 +212,14 @@ YMAL Example:
 
 In Code:
 
- my $cuc = Test::Cucumber::Tiny->ScenariosFromYML( "scenarios.yml" );
- $cuc->Given(...);
- ...
- $cuc->Then(...);
- $cuc->Test;
+ my $cuc = Test::Cucumber::Tiny->ScenariosFromYML( "feature-1.yml" )
+ ->ScenariosFromYML( "feature-2.yml" )
+ ->ScenariosFromYML( "feature-3.yml" )
+ ->ScenariosFromYML( "feature-4.yml" )
+ ->Given(...)
+ ->Whn(...)
+ ->Then(...)
+ ->Test;
 
 =cut
 
@@ -218,21 +229,9 @@ sub ScenariosFromYML {
 
 sub ScenariosFromYAML {
     my $class = shift;
-    my $yml_file  = shift
-      or die "Missing YAML file\n";
-
-    if ( !-f $yml_file ) {
-        die "YAML file is not found\n";
-    }
-
-    my $scenarios_ref = YAML::LoadFile($yml_file)
-      or die "YAML file has no scenarios";
-
-    if ( ref $scenarios_ref ne "ARRAY" ) {
-        die "Invalid sceanrio in yml file. It is expecting array list\n";
-    }
-
-    return $class->Scenarios(@$scenarios_ref);
+    my @scenarios = _decode_yml(@_)
+        or return $class;
+    return $class->Scenarios( @scenarios );
 }
 
 =head2 Before
@@ -491,8 +490,8 @@ sub Test {
             my $Examples     = $c->{Examples};
             my $FEATURE_WIDE = $c->{FEATURE_WIDE};
             $self->Log("! DEBUG: $Scenario - $Step");
-            $DB::single=1;
-            $DB::single=2; ## Avoid warnings use only once
+            $DB::single = 1;
+            $DB::single = 2;    ## Avoid warnings use only once
             print q{};
         }
     );
@@ -535,10 +534,10 @@ sub Test {
             $self->Log("\n--> Scenario: $subject\n");
 
           STEP:
-            foreach my $step( @run_through ) {
+            foreach my $step (@run_through) {
                 $stash{Step} = $step;
                 my $intercept =
-                $self->_run_step( $step, $scenario, $example, $stash_ref,
+                  $self->_run_step( $step, $scenario, $example, $stash_ref,
                     $triggers{$step} )
                   or next STEP;
                 next STEP     if $intercept eq $NEXT_STEP;
@@ -618,8 +617,7 @@ sub _run_test {
             $precondition = _apply_example( $precondition => %$example_ref );
             if ( ref $precondition ) {
                 my %checks = _check_hash_has_the_only_keys(
-                    [qw(condition data)] => %$precondition
-                );
+                    [qw(condition data)] => %$precondition );
                 if ( $checks{missing} ) {
                     die sprintf "\nFIXME: missing setting of %s $step\n\n",
                       join( ", ", map { qq{"$_"} } @{ $checks{missing} } );
@@ -637,11 +635,11 @@ sub _run_test {
 
 sub _apply_example {
     my $pre_cond = shift;
-    my %example = @_
+    my %example  = @_
       or return $pre_cond;
     foreach my $key ( keys %example ) {
         if ( ref $pre_cond ) {
-            $pre_cond->{condition} =~s/<\Q$key\E>/$example{$key}/g;
+            $pre_cond->{condition} =~ s/<\Q$key\E>/$example{$key}/g;
         }
         else {
             $pre_cond =~ s/<\Q$key\E>/$example{$key}/g;
@@ -677,10 +675,9 @@ sub _check_scenario_steps {
 
     my %known = map { $_ => 1 } ( @HEADS, @STEPS );
 
-    my %result = _check_hash_has_the_only_keys(
-        [@HEADS, @STEPS],
-        %scenario_hash
-    ) or return;
+    my %result =
+      _check_hash_has_the_only_keys( [ @HEADS, @STEPS ], %scenario_hash )
+      or return;
 
     return if !@{ $result{invalid} };
 
@@ -695,7 +692,7 @@ sub _check_hash_has_the_only_keys {
     my $keys_ref = shift;
     my %hash     = @_;
 
-    my %needed = map { $_ => 1 } @$keys_ref;
+    my %needed  = map  { $_ => 1 } @$keys_ref;
     my @invalid = grep { !$needed{$_} } keys %hash;
     my @missing = grep { !exists $hash{$_} } keys %needed;
 
@@ -744,17 +741,15 @@ By default the method is "explain"
 
 =cut
 
-sub SetVerboseMode {
-}
-
 sub Log {
-    my $self = shift;
+    my $self    = shift;
     my $message = shift
-        or return;
+      or return;
     my $mode = $ENV{CUCUMBER_VERBOSE} || $self->verbose
-        or return;
+      or return;
     my $code = Test::More->can($mode)
-        or confess("FIXME: Invalid verbose mode $mode. Try any method in Test::More");
+      or confess(
+        "FIXME: Invalid verbose mode $mode. Try any method in Test::More");
     $code->($message);
 }
 
@@ -890,6 +885,24 @@ L<http://cukes.info/>
 L<https://github.com/cucumber/cucumber/wiki/Scenario-outlines>
 
 =cut
+
+sub _decode_yml {
+    my $yml_file = shift
+      or die "Missing YAML file\n";
+
+    if ( !-f $yml_file ) {
+        die "YAML file is not found\n";
+    }
+
+    my $scenarios_ref = YAML::LoadFile($yml_file)
+      or die "YAML file has no scenarios";
+
+    if ( ref $scenarios_ref ne "ARRAY" ) {
+        die "Invalid sceanrio in yml file. It is expecting array list\n";
+    }
+
+    return @$scenarios_ref;
+}
 
 no Mo;
 no Carp;

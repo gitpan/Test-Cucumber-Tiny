@@ -26,18 +26,14 @@ subtest "next step" => sub {
             Then  => "is 5",
             After => [
                 "Rollover answer for next scenario",
-                "debugger",
             ]
         },
         {
             Scenario => "use the last scenario answer",
             Before   => [
-                "debugger",
                 "Setup buffer for pressed keys",
-                "debugger",
             ],
             Given    => [
-                "debugger",
                 "use last answer", "press +", "press 6", "press *", "press 2",
             ],
             When => "find answer",

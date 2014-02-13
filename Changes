@@ -1,3 +1,7 @@
+0.64 2014-02-13
+    + extended function ->ScenariosFromYML that can append new cases from YML, So you can
+      split your large scenarios into small parts
+
 0.63 2014-02-11
     - Tidy code
 
